@@ -1,5 +1,7 @@
 # Applied Data Science Capstone <!-- omit in toc -->
 
+- [Falcon 9 First-Stage Recovery Presentation](../SpaceX_Falcon9_Capstone_Presentation.pdf)
+
 - [Data Collection](#data-collection)
   - [Data Collection API](#data-collection-api)
     - [Jupyter Notebook: Data Collection API](#jupyter-notebook-data-collection-api)

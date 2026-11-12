@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Falcon 9 First-Stage Recovery | Data Science Capstone</title>
+<style>
+  :root {
+    --ink: #edf4ff;
+    --muted: #9eb0ca;
+    --bg: #071321;
+    --panel: #102137;
+    --panel-2: #152b43;
+    --line: #29415b;
+    --cyan: #52d6e8;
+    --lime: #b7ee65;
+    --coral: #ff826e;
+    --gold: #f3c76a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #030a12; color: var(--ink); font-family: "Segoe UI", Arial, sans-serif; }
+  body { counter-reset: page; }
+  .slide {
+    position: relative;
+    width: 13.333in;
+    height: 7.5in;
+    margin: 22px auto;
+    padding: .56in .72in .46in;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 92% 6%, rgba(82,214,232,.10), transparent 30%),
+      linear-gradient(145deg, #091727, #071321 68%);
+    page-break-after: always;
+    break-after: page;
+  }
+  .slide:last-child { page-break-after: auto; break-after: auto; }
+  .slide:before { content: ""; position: absolute; inset: .18in; border: 1px solid rgba(115,155,192,.15); pointer-events: none; }
+  .slide:after { counter-increment: page; content: "FALCON 9  /  CAPSTONE                                      " counter(page, decimal-leading-zero); position: absolute; bottom: .28in; left: .72in; right: .72in; color: #7690aa; font-size: 9px; letter-spacing: .16em; border-top: 1px solid var(--line); padding-top: 10px; }
+  h1, h2, h3, p { margin-top: 0; }
+  h1 { font-size: 56px; line-height: 1.02; letter-spacing: -.04em; max-width: 760px; }
+  h2 { font-size: 31px; letter-spacing: -.025em; margin-bottom: 12px; }
+  h3 { font-size: 18px; margin-bottom: 8px; }
+  p, li { color: var(--muted); font-size: 15px; line-height: 1.45; }
+  strong { color: var(--ink); }
+  a { color: var(--cyan); text-decoration: none; }
+  .eyebrow { color: var(--lime); font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; margin-bottom: 12px; }
+  .sub { font-size: 19px; line-height: 1.45; max-width: 720px; color: #b7c8dc; }
+  .tag { display: inline-block; border: 1px solid #3d5974; border-radius: 99px; padding: 6px 11px; margin: 3px 4px 0 0; color: #c5d5e7; font-size: 11px; letter-spacing: .04em; }
+  .grid { display: grid; gap: 14px; }
+  .two { grid-template-columns: 1fr 1fr; }
+  .three { grid-template-columns: repeat(3, 1fr); }
+  .four { grid-template-columns: repeat(4, 1fr); }
+  .card { background: linear-gradient(145deg, rgba(21,43,67,.94), rgba(13,31,50,.94)); border: 1px solid var(--line); border-radius: 13px; padding: 17px 19px; }
+  .card p:last-child { margin-bottom: 0; }
+  .metric { font-size: 38px; line-height: 1; font-weight: 750; color: var(--lime); letter-spacing: -.04em; margin: 5px 0 8px; }
+  .metric.cyan { color: var(--cyan); }
+  .metric.coral { color: var(--coral); }
+  .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .1em; }
+  .note { border-left: 3px solid var(--gold); padding: 9px 13px; color: #d7dfeb; background: rgba(243,199,106,.08); font-size: 13px; line-height: 1.45; }
+  .good { border-left-color: var(--lime); background: rgba(183,238,101,.07); }
+  .small { font-size: 11px; line-height: 1.35; }
+  .tight { margin-bottom: 8px; }
+  .title-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 23px; }
+  .title-row .eyebrow { margin-bottom: 6px; }
+  .title-row p { margin-bottom: 0; text-align: right; max-width: 330px; font-size: 12px; }
+  .rule { width: 70px; height: 3px; background: var(--cyan); margin: 18px 0 20px; }
+  .cover { display: flex; flex-direction: column; justify-content: center; }
+  .cover:before { border-color: rgba(82,214,232,.28); }
+  .cover .orbit { position: absolute; right: -80px; top: 45px; width: 590px; height: 590px; border: 1px solid rgba(82,214,232,.16); border-radius: 50%; }
+  .cover .orbit:before, .cover .orbit:after { content: ""; position: absolute; border: 1px solid rgba(82,214,232,.13); border-radius: 50%; inset: 62px; }
+  .cover .orbit:after { inset: 133px; border-color: rgba(183,238,101,.16); }
+  .cover .rocket { position: absolute; right: 2.2in; top: 1.58in; color: var(--lime); font-size: 13px; letter-spacing: .15em; transform: rotate(-24deg); }
+  .cover h1 { max-width: 650px; position: relative; z-index: 1; }
+  .cover .sub { position: relative; z-index: 1; }
+  .cover .chips { margin-top: 25px; position: relative; z-index: 1; }
+  .cover .meta { margin-top: 50px; color: #8398b1; font-size: 11px; letter-spacing: .12em; position: relative; z-index: 1; }
+  .bars { display: flex; flex-direction: column; gap: 12px; }
+  .bar-row { display: grid; grid-template-columns: 128px 1fr 58px; gap: 10px; align-items: center; font-size: 12px; color: #bfccdc; }
+  .track { height: 13px; background: #20364d; border-radius: 20px; overflow: hidden; }
+  .fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--lime)); border-radius: inherit; }
+  .bar-row b { color: var(--ink); text-align: right; font-size: 12px; }
+  .timeline { display: flex; align-items: flex-end; gap: 10px; height: 168px; padding: 14px 10px 24px; border-bottom: 1px solid var(--line); }
+  .year { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px; height: 100%; }
+  .year .col { width: 70%; min-height: 3px; background: linear-gradient(180deg,var(--lime),var(--cyan)); border-radius: 6px 6px 0 0; position: relative; }
+  .year .pct { font-size: 10px; color: var(--ink); }
+  .year .yr { font-size: 9px; color: var(--muted); }
+  .chart-title { font-size: 11px; color: #a9bad0; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 9px; }
+  .map-wrap { height: 3.8in; border-radius: 13px; overflow: hidden; background: #0c1b2b; border: 1px solid var(--line); padding: 10px; }
+  .map-label { font-size: 11px; fill: #dce9f5; }
+  .map-minor { font-size: 9px; fill: #91a7bd; }
+  .dashboard { background: #f4f7fa; border-radius: 12px; padding: 16px; color: #192b3d; min-height: 3.45in; }
+  .dash-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+  .dash-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 10px; }
+  .control { border: 1px solid #cbd5df; border-radius: 5px; padding: 8px 9px; background: white; font-size: 10px; color: #40546a; }
+  .dash-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .dash-chart { background: white; border: 1px solid #dce3e9; border-radius: 7px; height: 1.12in; padding: 9px; }
+  .dash-chart strong { color: #243d57; font-size: 10px; display: block; margin-bottom: 6px; }
+  .pie { height: 62px; width: 62px; margin: 1px auto; border-radius: 50%; background: conic-gradient(#31a8a0 0 43%, #e68d79 43% 100%); }
+  .scatter { height: 60px; position: relative; background: linear-gradient(to top,transparent 19px,#edf1f5 20px,transparent 21px), linear-gradient(to right,transparent 48%,#edf1f5 49%,transparent 50%); }
+  .dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #179eaa; }
+  .step { display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: start; margin: 0 0 13px; }
+  .step .num { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: rgba(82,214,232,.13); color: var(--cyan); font-weight: 700; font-size: 12px; }
+  .step p { margin: 0; font-size: 13px; }
+  .step strong { display: block; margin-bottom: 2px; }
+  .checklist { list-style: none; padding: 0; margin: 9px 0 0; }
+  .checklist li { padding: 6px 0 6px 20px; position: relative; margin: 0; font-size: 13px; }
+  .checklist li:before { content: "+"; position: absolute; left: 0; color: var(--lime); font-weight: 700; }
+  .source-line { color: #8ca2ba; font-size: 10px; line-height: 1.35; overflow-wrap: anywhere; }
+  @page { size: 13.333in 7.5in; margin: 0; }
+  @media print {
+    html, body { width: 13.333in; background: var(--bg); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .slide { margin: 0; box-shadow: none; }
+    a { color: var(--cyan); }
+  }
+</style>
+</head>
+<body>
+<section class="slide cover">
+  <div class="orbit"></div><div class="rocket">REUSE CHANGES THE ECONOMICS</div>
+  <div class="eyebrow">Applied data science capstone</div>
+  <h1>Can the booster<br>land again?</h1>
+  <div class="rule"></div>
+  <p class="sub">A data-led look at Falcon 9 first-stage recovery: from launch records and SQL to maps, dashboards, and classification.</p>
+  <div class="chips"><span class="tag">DATA COLLECTION</span><span class="tag">EXPLORATION</span><span class="tag">PREDICTION</span></div>
+  <p class="meta">FALCON 9 FIRST-STAGE RECOVERY  /  FINAL PROJECT PRESENTATION</p>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">01 / Executive summary</div><h2>Reuse is measurable - but the evidence needs context.</h2></div><p>Four takeaways, with each number tied to its source sample.</p></div>
+  <div class="grid four">
+    <div class="card"><div class="label">SQL launch records</div><div class="metric cyan">101</div><p>Archived rows in the SQL analysis. Mission outcomes and booster landing outcomes are distinct measures.</p></div>
+    <div class="card"><div class="label">Modeling sample</div><div class="metric">90</div><p>Rows and 83 encoded features in the classification notebook.</p></div>
+    <div class="card"><div class="label">Recovery label</div><div class="metric cyan">60 / 90</div><p>Successful first-stage landings in the modeling sample: 66.7%.</p></div>
+    <div class="card"><div class="label">Reported holdout</div><div class="metric coral">94.4%</div><p>17 of 18 predictions correct as reported; likely optimistic because tuning used all 90 rows.</p></div>
+  </div>
+  <div class="grid two" style="margin-top:16px">
+    <div class="note good"><strong>Signal:</strong> recovery success rises sharply across the available years; the 90-row sample also shows higher success among later flight numbers.</div>
+    <div class="note"><strong>Decision:</strong> use these results to prioritize better validation and operational questions - not as a flight-ready landing predictor.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">02 / Introduction</div><h2>The business question is about reusability.</h2></div><p>Frame the outcome correctly before comparing models.</p></div>
+  <div class="grid two">
+    <div class="card" style="padding:25px">
+      <div class="label">Question</div><h3 style="font-size:25px;margin-top:12px">Which launch conditions are associated with a successful first-stage recovery?</h3>
+      <p>Falcon 9's reusable first stage can reduce launch cost. For a launch provider evaluating a competitive bid, landing reliability matters because it changes how often hardware can be recovered and flown again.</p>
+      <span class="tag">TARGET: FIRST-STAGE LANDING</span><span class="tag">NOT: MISSION SUCCESS</span>
+    </div>
+    <div class="card">
+      <div class="label">Decision path</div>
+      <div class="step"><div class="num">1</div><p><strong>Collect</strong>Combine API launch metadata with an archived launch-history table.</p></div>
+      <div class="step"><div class="num">2</div><p><strong>Explain</strong>Compare outcomes by time, site, orbit, payload, and landing context.</p></div>
+      <div class="step"><div class="num">3</div><p><strong>Explore</strong>Let reviewers filter the evidence geographically and interactively.</p></div>
+      <div class="step"><div class="num">4</div><p><strong>Predict cautiously</strong>Test whether launch attributes help classify recovery outcomes.</p></div>
+    </div>
+  </div>
+  <div class="note" style="margin-top:16px"><strong>Interpretation guardrail:</strong> a successful mission can occur without a successful booster landing. SQL results count mission outcomes separately from the classification target.</div>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">03 / Methodology</div><h2>Collection and wrangling turn launch history into a target.</h2></div><p>Sources and transformations documented in the repository notebooks.</p></div>
+  <div class="grid two">
+    <div class="card">
+      <h3>Data collection</h3>
+      <div class="step"><div class="num">A</div><p><strong>SpaceX REST API</strong>Past launches plus related launch, rocket, payload, and landing-site metadata.</p></div>
+      <div class="step"><div class="num">B</div><p><strong>Archived launch table</strong>Wikipedia snapshot scraped for additional launch and landing-outcome fields.</p></div>
+      <div class="step"><div class="num">C</div><p><strong>Join on launch identifiers</strong>Retain Falcon 9 launches and fields needed for analysis.</p></div>
+    </div>
+    <div class="card">
+      <h3>Data preparation</h3>
+      <ul class="checklist">
+        <li>Normalize date, site, orbit, booster, and payload fields.</li>
+        <li>Convert first-stage landing outcome to binary class: landed = 1, otherwise = 0.</li>
+        <li>Fill missing payload values with the sample mean in the provided workflow.</li>
+        <li>One-hot encode categorical orbit, site, landing-pad, and booster identifiers.</li>
+        <li>Result for modeling: 90 rows x 83 columns; scale features before classification.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="grid three" style="margin-top:16px">
+    <div class="card"><div class="label">Data quality</div><p class="tight">Missing payloads are imputed, not discarded.</p></div>
+    <div class="card"><div class="label">Target engineering</div><p class="tight">Landing outcome is separated from mission outcome.</p></div>
+    <div class="card"><div class="label">Reproducibility</div><p class="tight">Notebooks preserve source queries, transforms, and plots.</p></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">04 / Methodology</div><h2>EDA and interactive analytics triangulate the evidence.</h2></div><p>Four methods answer different questions; none replaces the others.</p></div>
+  <div class="grid four">
+    <div class="card"><div class="label">SQL / SQLite</div><div class="metric cyan" style="font-size:26px">QUERY</div><p>Group outcomes, payload mass, launch site, booster version, and mission results.</p></div>
+    <div class="card"><div class="label">Pandas / charts</div><div class="metric" style="font-size:26px">COMPARE</div><p>Plot success by flight number, payload, orbit, site, and year.</p></div>
+    <div class="card"><div class="label">Folium</div><div class="metric cyan" style="font-size:26px">LOCATE</div><p>Cluster launches at site coordinates and color markers by landing result.</p></div>
+    <div class="card"><div class="label">Plotly Dash</div><div class="metric" style="font-size:26px">FILTER</div><p>Choose launch site and payload range; inspect outcome and payload patterns.</p></div>
+  </div>
+  <div class="grid two" style="margin-top:16px">
+    <div class="card"><h3>Visual analytics</h3><p class="tight">A site selector filters the success/failure view; a payload range slider narrows payload-versus-outcome points. Folium's marker clusters keep nearby site observations legible.</p></div>
+    <div class="card"><h3>Predictive analysis</h3><p class="tight">Train/test split, cross-validated hyperparameter search, and model scoring are recorded in the supplied classification notebook.</p></div>
+  </div>
+  <p class="source-line" style="margin-top:14px">Evidence is drawn from separate saved snapshots; see the data-scope note on slide 12 before comparing counts.</p>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">05 / EDA results</div><h2>Recovery improves with launch experience.</h2></div><p>90-row modeling sample; rates are descriptive, not causal.</p></div>
+  <div class="grid two">
+    <div class="card">
+      <div class="chart-title">First-stage success rate by year</div>
+      <div class="timeline">
+        <div class="year"><span class="pct">0%</span><div class="col" style="height:3px"></div><span class="yr">2010</span></div>
+        <div class="year"><span class="pct">0%</span><div class="col" style="height:3px"></div><span class="yr">2012</span></div>
+        <div class="year"><span class="pct">0%</span><div class="col" style="height:3px"></div><span class="yr">2013</span></div>
+        <div class="year"><span class="pct">33%</span><div class="col" style="height:44px"></div><span class="yr">2014</span></div>
+        <div class="year"><span class="pct">33%</span><div class="col" style="height:44px"></div><span class="yr">2015</span></div>
+        <div class="year"><span class="pct">63%</span><div class="col" style="height:83px"></div><span class="yr">2016</span></div>
+        <div class="year"><span class="pct">83%</span><div class="col" style="height:111px"></div><span class="yr">2017</span></div>
+        <div class="year"><span class="pct">61%</span><div class="col" style="height:82px"></div><span class="yr">2018</span></div>
+        <div class="year"><span class="pct">90%</span><div class="col" style="height:120px"></div><span class="yr">2019</span></div>
+        <div class="year"><span class="pct">84%</span><div class="col" style="height:112px"></div><span class="yr">2020</span></div>
+      </div>
+      <p class="small" style="margin:9px 0 0">Small early-year denominators (1-6 launches) make early rates volatile.</p>
+    </div>
+    <div class="card">
+      <div class="chart-title">Success rate by launch site</div>
+      <div class="bars">
+        <div class="bar-row"><span>CCAFS SLC 40</span><div class="track"><div class="fill" style="width:60%"></div></div><b>33 / 55<br>60.0%</b></div>
+        <div class="bar-row"><span>KSC LC 39A</span><div class="track"><div class="fill" style="width:77.3%"></div></div><b>17 / 22<br>77.3%</b></div>
+        <div class="bar-row"><span>VAFB SLC 4E</span><div class="track"><div class="fill" style="width:76.9%"></div></div><b>10 / 13<br>76.9%</b></div>
+      </div>
+      <div class="rule"></div>
+      <p><strong>Payload contrast:</strong> successful rows average 6,765 kg vs 4,785 kg for unsuccessful rows in this sample.</p>
+      <div class="note">Payload alone is not the explanation: site, orbit, booster generation, and time are entangled.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">06 / EDA with SQL</div><h2>SQL separates mission performance from recovery.</h2></div><p>Saved SQLite results from the archived launch table.</p></div>
+  <div class="grid three">
+    <div class="card"><div class="label">Mission outcomes</div><div class="metric cyan">100 : 1</div><p>100 rows labeled mission success, 1 labeled mission failure in the query output.</p></div>
+    <div class="card"><div class="label">NASA payload</div><div class="metric">99,980 kg</div><p>Total payload mass for customers whose names begin with NASA.</p></div>
+    <div class="card"><div class="label">CRS payload</div><div class="metric cyan">45,596 kg</div><p>Payload mass total for NASA Commercial Resupply Services missions.</p></div>
+  </div>
+  <div class="grid two" style="margin-top:16px">
+    <div class="card"><h3>Useful query cuts</h3><ul class="checklist"><li>Distinct sites: CCAFS LC-40, CCAFS SLC-40, KSC LC-39A, VAFB SLC-4E.</li><li>Mean payload for F9 v1.1: about 2,535 kg.</li><li>First recorded ground-pad landing success in this table: 1 May 2017.</li></ul></div>
+    <div class="card"><h3>What SQL adds</h3><p>It makes the unit of analysis explicit: a mission can succeed even when a landing attempt is absent or fails. Counting "mission success" is not a substitute for the recovery label.</p><div class="note good"><strong>Interpretation:</strong> retain both targets in reporting; do not describe the 100:1 mission count as a landing success rate.</div></div>
+  </div>
+  <p class="source-line" style="margin-top:12px">SQL notebook: SELECT/GROUP BY and payload aggregates against SQLite table SPACEXTBL. Results are those saved in the cloned source notebooks.</p>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">07 / Interactive map results</div><h2>Launch activity is geographically concentrated.</h2></div><p>Folium site map: four launch-site coordinates, clustered outcome markers.</p></div>
+  <div class="grid two">
+    <div class="map-wrap">
+      <svg viewBox="0 0 600 330" width="100%" height="100%" role="img" aria-label="Schematic map of launch sites on the US west and east coasts">
+        <defs><linearGradient id="ocean" x1="0" x2="1"><stop stop-color="#102b43"/><stop offset="1" stop-color="#0b1c2c"/></linearGradient></defs>
+        <rect width="600" height="330" rx="10" fill="url(#ocean)"/>
+        <path d="M66 20 L110 35 L127 62 L149 77 L154 104 L171 116 L177 145 L194 156 L205 180 L225 187 L246 210 L264 215 L281 230 L306 228 L325 243 L350 238 L373 249 L401 237 L430 245 L448 229 L468 223 L482 205 L501 198 L512 176 L533 167 L539 144 L520 130 L512 108 L495 90 L485 64 L462 42 L437 34 L412 23 L386 29 L365 18 L342 29 L319 22 L293 30 L268 23 L244 30 L219 25 L193 36 L171 27 L150 38 L125 29 L105 35 L84 23 Z" fill="#18384b" stroke="#477087" stroke-width="2"/>
+        <path d="M78 42 Q95 113 115 157 Q128 194 155 246" fill="none" stroke="#52d6e8" stroke-opacity=".5" stroke-width="2" stroke-dasharray="4 5"/>
+        <path d="M516 91 Q490 120 469 150 Q453 177 430 214" fill="none" stroke="#52d6e8" stroke-opacity=".5" stroke-width="2" stroke-dasharray="4 5"/>
+        <text x="34" y="286" class="map-minor">PACIFIC</text><text x="484" y="286" class="map-minor">ATLANTIC</text>
+        <circle cx="127" cy="148" r="13" fill="#ff826e" fill-opacity=".16"/><circle cx="127" cy="148" r="5" fill="#ff826e"/><text x="37" y="137" class="map-label">VAFB SLC-4E</text>
+        <circle cx="502" cy="200" r="24" fill="#52d6e8" fill-opacity=".12"/><circle cx="502" cy="200" r="14" fill="#b7ee65" fill-opacity=".18"/><circle cx="502" cy="200" r="6" fill="#b7ee65"/><text x="426" y="239" class="map-label">CCAFS / KSC</text>
+        <circle cx="495" cy="193" r="5" fill="#ff826e"/><circle cx="508" cy="207" r="5" fill="#52d6e8"/>
+        <text x="350" y="48" class="map-minor">SCHEMATIC - LOCATIONS FROM NOTEBOOK COORDINATES</text>
+      </svg>
+    </div>
+    <div>
+      <div class="card"><h3>What the Folium view shows</h3><p>Green markers indicate successful first-stage landings; red markers indicate unsuccessful outcomes. Marker clusters summarize launches around each site and can be explored at closer zoom.</p></div>
+      <div class="grid two" style="margin-top:12px">
+        <div class="card"><div class="label">Sites in map</div><div class="metric cyan">4</div><p>Florida dominates the map's launch density.</p></div>
+        <div class="card"><div class="label">Mapped sample</div><div class="metric">56</div><p>Rows in the saved geospatial/dashboard extract.</p></div>
+      </div>
+      <p class="small" style="margin-top:11px">This is a schematic rendering for print. The repository notebook contains the interactive Folium map with marker clusters and coordinates.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">08 / Plotly Dash results</div><h2>Filters turn a static comparison into an exploration.</h2></div><p>Dashboard extract contains 56 launch observations.</p></div>
+  <div class="grid two">
+    <div class="dashboard">
+      <div class="dash-title">SpaceX Launch Records Dashboard</div>
+      <div class="dash-controls"><div class="control">Launch site: All Sites v</div><div class="control">Payload range: 0 - 10,000 kg</div></div>
+      <div class="dash-panels">
+        <div class="dash-chart"><strong>Success / failure by site</strong><div class="pie"></div></div>
+        <div class="dash-chart"><strong>Payload mass vs. landing class</strong><div class="scatter"><i class="dot" style="left:14%;bottom:14px"></i><i class="dot" style="left:22%;bottom:32px"></i><i class="dot" style="left:32%;bottom:18px"></i><i class="dot" style="left:44%;bottom:42px"></i><i class="dot" style="left:54%;bottom:25px"></i><i class="dot" style="left:66%;bottom:48px"></i><i class="dot" style="left:78%;bottom:31px"></i><i class="dot" style="left:85%;bottom:53px"></i></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Site comparison in dashboard snapshot</h3>
+      <div class="bars">
+        <div class="bar-row"><span>CCAFS LC-40</span><div class="track"><div class="fill" style="width:26.9%"></div></div><b>7 / 26<br>26.9%</b></div>
+        <div class="bar-row"><span>VAFB SLC-4E</span><div class="track"><div class="fill" style="width:40%"></div></div><b>4 / 10<br>40.0%</b></div>
+        <div class="bar-row"><span>CCAFS SLC-40</span><div class="track"><div class="fill" style="width:42.9%"></div></div><b>3 / 7<br>42.9%</b></div>
+        <div class="bar-row"><span>KSC LC-39A</span><div class="track"><div class="fill" style="width:76.9%"></div></div><b>10 / 13<br>76.9%</b></div>
+      </div>
+      <div class="note" style="margin-top:14px">The site pattern is a prompt for investigation, not a causal ranking: sample sizes differ, and this is not the same extract as the 90-row EDA/model sample.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">09 / Predictive methodology</div><h2>Classification tests signal - the validation design matters.</h2></div><p>Reported pipeline, with the key risk made explicit.</p></div>
+  <div class="grid three">
+    <div class="card"><div class="label">Inputs</div><div class="metric cyan">90 x 83</div><p>90 launches; 83 numeric/one-hot encoded features. Target: first-stage landing class.</p></div>
+    <div class="card"><div class="label">Split</div><div class="metric">72 / 18</div><p>80/20 train-test split with random_state = 2.</p></div>
+    <div class="card"><div class="label">Models</div><div class="metric cyan" style="font-size:28px">LR / SVM</div><p>Logistic regression, support vector classifier, and decision-tree tuning.</p></div>
+  </div>
+  <div class="grid two" style="margin-top:16px">
+    <div class="card"><h3>Notebook workflow</h3>
+      <div class="step"><div class="num">1</div><p><strong>Scale features</strong>StandardScaler transforms the encoded feature matrix.</p></div>
+      <div class="step"><div class="num">2</div><p><strong>Search parameters</strong>GridSearchCV uses 10-fold CV; examples include C for logistic regression and C/gamma/kernel for SVC.</p></div>
+      <div class="step"><div class="num">3</div><p><strong>Score and inspect</strong>Evaluate the selected estimator and plot a confusion matrix.</p></div>
+    </div>
+    <div class="card">
+      <h3>Validation risk</h3>
+      <div class="note"><strong>Leakage in saved workflow:</strong> preprocessing and hyperparameter search are fit using all 90 observations before scoring the 18-row test split. The holdout is therefore not independent.</div>
+      <ul class="checklist"><li>Put scaling inside a Pipeline.</li><li>Run GridSearchCV on training data only.</li><li>Use stratified folds and keep the test set untouched until final evaluation.</li><li>Report precision/recall and a confusion matrix, not accuracy alone.</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">10 / Classification results</div><h2>Promising score; not yet a trustworthy forecast.</h2></div><p>Results as recorded in the notebook, interpreted conservatively.</p></div>
+  <div class="grid two">
+    <div class="card" style="text-align:center;padding:25px">
+      <div class="label">Reported test accuracy</div><div class="metric coral" style="font-size:66px;margin:17px 0">94.4%</div>
+      <p style="font-size:18px;color:var(--ink)">17 correct out of 18 test observations</p>
+      <div class="rule" style="margin:18px auto"></div>
+      <p>Logistic regression and SVC both report this score; their saved 10-fold CV accuracy is about 82.2%.</p>
+    </div>
+    <div class="card">
+      <div class="chart-title">Reported vs. evaluation confidence</div>
+      <div class="bars" style="margin:22px 0">
+        <div class="bar-row"><span>Holdout score*</span><div class="track"><div class="fill" style="width:94.4%"></div></div><b>94.4%</b></div>
+        <div class="bar-row"><span>10-fold CV</span><div class="track"><div class="fill" style="width:82.2%"></div></div><b>82.2%</b></div>
+      </div>
+      <div class="note"><strong>*Caveat:</strong> The test metric is contaminated by full-data scaling/model tuning. It should not be presented as a reliable estimate of future-launch accuracy.</div>
+      <p style="margin-top:14px"><strong>Next experiment:</strong> rerun the model with train-only preprocessing and tuning, then compare against a simple majority-class baseline.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">11 / Innovative insight</div><h2>Three snapshots, three questions - don't collapse them.</h2></div><p>A data lineage check changes how every headline is read.</p></div>
+  <div class="grid three">
+    <div class="card"><div class="label">SQL snapshot</div><div class="metric cyan">101</div><p>Archived rows used for mission/landing SQL queries.</p></div>
+    <div class="card"><div class="label">Model snapshot</div><div class="metric">90</div><p>Encoded feature rows for recovery classification and EDA.</p></div>
+    <div class="card"><div class="label">Map/Dash snapshot</div><div class="metric coral">56</div><p>Rows in the saved geospatial and dashboard extract.</p></div>
+  </div>
+  <div class="grid two" style="margin-top:16px">
+    <div class="card">
+      <h3>Why it matters</h3>
+      <p>The snapshots differ in row counts and fields. A site rate from the 56-row dashboard should not be compared directly with a site rate from the 90-row model sample as if both came from one table.</p>
+    </div>
+    <div class="card">
+      <h3>Second signal: recovery is a learning curve</h3>
+      <p>Year-level success rises from 0% in 2010-2013 to mostly above 80% in 2017-2020. Meanwhile success is higher for heavier payload rows in this sample - likely reflecting launch era, booster maturity, and mission mix rather than payload mass alone.</p>
+    </div>
+  </div>
+  <div class="note good" style="margin-top:14px"><strong>Novel takeaway:</strong> aligning snapshot provenance and separating mission outcome from recovery are prerequisites for a fair business comparison - and probably more valuable than adding model complexity.</div>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">12 / Conclusion</div><h2>Build the evidence chain before acting on the score.</h2></div><p>What an analyst should take forward.</p></div>
+  <div class="grid two">
+    <div class="card">
+      <h3>Conclusions</h3>
+      <ul class="checklist">
+        <li>First-stage recovery becomes more common in later records, consistent with operational learning and hardware evolution.</li>
+        <li>Launch site, orbit, payload, booster, and time all shape the observed outcome; no single variable explains recovery.</li>
+        <li>SQL, visual EDA, Folium, and Dash make different parts of the story inspectable.</li>
+        <li>The 94.4% saved test score is not a dependable forecast because the pipeline leaks test information.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Recommended next steps</h3>
+      <div class="step"><div class="num">1</div><p><strong>Reconcile inputs</strong>Publish one versioned analysis table and document row-level inclusion rules.</p></div>
+      <div class="step"><div class="num">2</div><p><strong>Validate honestly</strong>Use a leakage-safe pipeline and a time-aware holdout for future launches.</p></div>
+      <div class="step"><div class="num">3</div><p><strong>Communicate uncertainty</strong>Show denominators, class balance, calibration, and subgroup performance.</p></div>
+      <div class="step"><div class="num">4</div><p><strong>Keep the tools live</strong>Use the site/payload dashboard for exploration, not automated launch decisions.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="title-row"><div><div class="eyebrow">13 / Repository and sources</div><h2>Reproducible work, linked to the evidence.</h2></div><p>Notebooks, scripts, data extracts, and the submitted deck.</p></div>
+  <div class="grid two">
+    <div class="card">
+      <div class="label">Project repository</div>
+      <h3 style="font-size:21px;margin-top:9px"><a href="https://github.com/astrid1919/Data-Science-Capstone">github.com/astrid1919/Data-Science-Capstone</a></h3>
+      <p>Includes the completed capstone notebooks, Python dashboard, data extracts, and this presentation.</p>
+      <div class="note good">Presentation: <strong>SpaceX_Falcon9_Capstone_Presentation.pdf</strong></div>
+    </div>
+    <div class="card">
+      <div class="label">Data and methods references</div>
+      <p class="source-line"><strong>Course materials and completed notebook source:</strong><br><a href="https://github.com/lijqhs/data-science-notes">github.com/lijqhs/data-science-notes</a></p>
+      <p class="source-line"><strong>SpaceX API:</strong><br><a href="https://github.com/r-spacex/SpaceX-API">github.com/r-spacex/SpaceX-API</a></p>
+      <p class="source-line"><strong>Launch history:</strong><br><a href="https://en.wikipedia.org/w/index.php?title=List_of_Falcon_9_and_Falcon_Heavy_launches&amp;oldid=1027686922">Archived Falcon 9 / Falcon Heavy launch table</a> used in the capstone notebook.</p>
+      <p class="source-line">All displayed metrics are reproduced from saved repository outputs or calculated directly from included CSV extracts; snapshots may differ in coverage.</p>
+    </div>
+  </div>
+  <div class="rule"></div>
+  <p class="sub">Thank you.<br><strong>Question for the next analysis:</strong> how much of the recovery learning curve remains when we evaluate only on future launches?</p>
+</section>
+</body>
+</html>

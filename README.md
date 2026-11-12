@@ -2,6 +2,10 @@
 
 This repository is for notes taken from the [IBM Data Science Course](https://www.coursera.org/professional-certificates/ibm-data-science) on Coursera.
 
+## SpaceX Capstone Presentation
+
+The completed Falcon 9 first-stage recovery presentation is available as [SpaceX_Falcon9_Capstone_Presentation.pdf](SpaceX_Falcon9_Capstone_Presentation.pdf). Its supporting notebooks, Python dashboard, and data extracts are in [c10-applied-data-science-capstone](c10-applied-data-science-capstone/readme.md).
+
 Table of Contents:
 
 - [What is Data Science](c01-what-is-data-science/readme.md)
